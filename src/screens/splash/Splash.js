@@ -5,14 +5,13 @@ const Splash = () =>{
     const  navigation = useNavigation();
     useEffect(()=>{
   setTimeout(() => {
-    navigation.navigate("Home")
+    navigation.navigate("Login")
   }, 3000);
     },[]);
     return(
        <View style={{flex:1,justifyContent:"center",alignItems:"center"}}>
         <Image source={require("../../assets/emssplashlogo2.jpg")}
-         style={{width:200,height:200,borderRadius:40}}
-        
+         style={{width:200,height:200,borderRadius:40}}        
          />
        </View>
     )

@@ -1,18 +1,27 @@
-import React from "react";
-import { View ,Text,TextInput,StyleSheet} from "react-native";
-const Inputbox = ({label , placeholder2,onChange}) =>{
+import React, { useState } from "react";
+import { View ,Text,TextInput,StyleSheet,TouchableOpacity} from "react-native";
+import { Image } from "react-native-animatable";
+import Icons from "../../icons/Icons";
+const Inputbox = ({label , placeholder2,onChangeText,icon,icon2,type,errmsg}) =>{
+    const [securetext , setsecuretext]=useState(true) 
+    console.log("hello",errmsg)
     console.log(placeholder2)
     return(
         <>
         {label && <Text style={styles.label}>{label}</Text>}
         <View style={label?styles.container:styles.container2}>
             <TextInput
+            secureTextEntry={type=="password"?securetext:false}
              placeholder={placeholder2?placeholder2:""} 
              style={styles.inputbox}
+             onChangeText={onChangeText}
              >
              </TextInput>
-             <Text style={{marginRight:"4%"}}>eyr</Text>
+             <TouchableOpacity onPress={() => setsecuretext(!securetext)}>
+                <Image source={securetext?icon:icon2} style={{width:25,height:25,marginLeft:"3%"}}/>
+      </TouchableOpacity>
         </View>
+        {errmsg && <Text style={styles.errText}>{errmsg}</Text>}
         </>
     )
 }
@@ -44,6 +53,7 @@ const styles = StyleSheet.create({
     inputbox:{
         height:"100%",
         fontSize:17,
+        width:"90%",
     },
     label:{
         marginRight:"65%",
@@ -51,6 +61,12 @@ const styles = StyleSheet.create({
         fontWeight:600,
         marginTop:10,
         color:"#303030"
+    },
+    
+    errText:{
+        color:"#cf212a",
+        marginRight:"42%",
+        fontSize:13,
     }
 })
 export default Inputbox;
