@@ -1,4 +1,7 @@
 buildscript {
+    project.ext.vectoricons = [
+    iconFontNames: [ 'MaterialIcons.ttf', 'FontAwesome.ttf', 'Ionicons.ttf' ] 
+]
     ext {
         buildToolsVersion = "35.0.0"
         minSdkVersion = 24

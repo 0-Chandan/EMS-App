@@ -4,8 +4,6 @@ import { Image } from "react-native-animatable";
 import Icons from "../../icons/Icons";
 const Inputbox = ({label , placeholder2,onChangeText,icon,icon2,type,errmsg}) =>{
     const [securetext , setsecuretext]=useState(true) 
-    console.log("hello",errmsg)
-    console.log(placeholder2)
     return(
         <>
         {label && <Text style={styles.label}>{label}</Text>}

@@ -1,14 +1,45 @@
-import React,{useState}from "react";
+import React,{useEffect, useState}from "react";
 import { StyleSheet, TextInput ,Image, Button,TouchableNativeFeedback, Alert, BackHandler } from "react-native";
 import { View, Text } from "react-native-animatable";
 import Inputbox from "../../Components/inputbox/Inputbox";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useSelector } from "react-redux";
 const Login = () => {
+    const currrentUser = useSelector((state)=>state.user.users);
+
     const[email,setemail]=useState("");
     const[password,setpassword]=useState("");
      const[errmsg,seterrmsg]=useState({});
     const navigation = useNavigation();
 
+    const getdata=async()=>{
+        
+        try{
+             const getname= await AsyncStorage.getItem("name");
+             const getemail = await AsyncStorage.getItem("email");
+             const getpassword = await AsyncStorage.getItem("password")
+             console.log("getmail==",getemail);
+             console.log("password==",getpassword);
+             setTimeout(() => {
+                if(email===getemail && password===getpassword){
+                    setemail("");
+                    setpassword("");
+                    navigation.navigate("Tab", { screen: "Home" });
+                    
+                }
+                else{
+                    Alert.alert("Invalid email or passord");
+                }
+             }, 2000);
+            
+        }
+        catch(error){
+            Alert.alert(error);
+        }
+    }
+    
+  
 
     const handlelogin = ()=>{
     let newerr={};
@@ -23,7 +54,7 @@ const Login = () => {
         newerr.password="This field is required"; 
     }
     else{
-         navigation.navigate("Home");
+        getdata()
     }
     seterrmsg(newerr);
 }

@@ -3,14 +3,36 @@ import { StyleSheet, TextInput ,Image, Button,TouchableNativeFeedback, Alert, Ke
 import { View, Text } from "react-native-animatable";
 import Inputbox from "../../Components/inputbox/Inputbox";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch } from "react-redux";
+import { signUp } from "../../redux/userSlice";
+
 
 const  Signup= () => {
     const navigation = useNavigation();
+    const dispatch = useDispatch();
     const[name,setname]=useState("");
     const[email,setemail]=useState("");
     const[password,setpassword]=useState("");
     const[cpassword,setcpassword]=useState("");
     const[errmsg,seterrmsg]=useState({});
+
+    const saveuserdata=async()=>{
+        const form ={
+            name:name,
+            email:email,
+            password:password,
+        }
+
+        dispatch(signUp(form));
+      try{
+        await AsyncStorage.setItem("name",name)
+        await AsyncStorage.setItem("email",email);
+        await AsyncStorage.setItem("password",password);
+      }catch(error){
+        Alert.alert(error);
+      }
+    }
 
     const handlesignup=()=>{
         let newerr={};
@@ -30,7 +52,10 @@ const  Signup= () => {
             newerr.cpassword="Password doesn't match";
         }
         else{
-            Alert.alert("Signup");
+            saveuserdata();
+            setTimeout(() => {
+                navigation.navigate("Login");
+            }, 3000);
         }
         seterrmsg(newerr);
     }

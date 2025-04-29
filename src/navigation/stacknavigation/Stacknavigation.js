@@ -9,12 +9,12 @@ import About from "../../screens/About/About";
 import Signup from "../../screens/signup/Signup";
 import Forgotpass from "../../screens/forgotpass/Forgotpass";
 import Home from "../../screens/home/Home";
+import Tab from "../tab/Tab";
 
 const Stack = createNativeStackNavigator(); 
 
 const Stacknavigation = () => {
     return (
-        <NavigationContainer>
             <Stack.Navigator initialRouteName="Splash">
                 <Stack.Screen
                     options={{ headerShown: false }}
@@ -41,8 +41,14 @@ const Stacknavigation = () => {
                 <Stack.Screen 
                 name="About" 
                 component={About} />
+                <Stack.Screen 
+                name="Tab"  
+                options={{ headerShown: false }} 
+                component={Tab} 
+                
+                />
             </Stack.Navigator>
-        </NavigationContainer>
+      
     );
 };
 
