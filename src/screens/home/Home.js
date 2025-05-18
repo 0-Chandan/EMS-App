@@ -1,4 +1,4 @@
-import React  , {useState} from "react";
+import React  , {useEffect, useState} from "react";
 import { View, Text, StyleSheet, ScrollView, Alert, TextInput } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Header from "../../Components/header/Header";
@@ -7,19 +7,49 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "react-native-animatable";
 import ProjectCard from "../../Components/projectcard/ProjectCard";
 import SearchInputbox from "../../Components/searchinputbox/SearchInputbox";
+import firestore from '@react-native-firebase/firestore';
+import database, { set } from '@react-native-firebase/database';
+import { useSelector } from "react-redux";
 // import { useSelector } from "react-redux";
 
 
 const Home = ({navigation}) => {
     // const currrentUser = useSelector((state) => state.user.users);
+    const currrentUser = useSelector((state)=>state.user.users);
+    console.log("currrentUser==",currrentUser);
+    const getGreting = () =>{
+        const hour = new Date().getHours();
+        if(hour<12){
+            return "Good Morning";
+        }
+        else if(hour<18){
+            return "Good Afternoon";
+        }
+        else{
+            return "Good Evening";
+        }
+    }
     // Alert.alert("User Name", currrentUser?.name?.toString() ?? "No name");
+    useEffect(()=>{
+        const greeting = getGreting();
+        setgreeting(greeting);
+   if(Object.keys(currrentUser).length<=0){
+       navigation.navigate("Login");
+   }
+    },[])
+    const[empname,setempname]=useState("");
+    const[role,setrole]=useState("");
+    const[greeting,setgreeting]=useState("");   
+    console.log("empname==",empname , role);
+   
+   
     const[search,setSearch]=useState("");
     return (
       <>
          <Header 
          navigation={navigation}
-         greeting={"Good Morning"}
-          headername={"Chandan Kumar"}
+         greeting={greeting || "Good Morning"}
+          headername={currrentUser?.name || "No employee available"}
           isiconvisible={true} 
          />
         <ScrollView>

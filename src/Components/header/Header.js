@@ -4,15 +4,15 @@ import { View,Text,StyleSheet, TouchableOpacity} from "react-native";
 import { Image } from "react-native-animatable";
 import { width,height } from "../../constant/Dimensions";
 import Icons from 'react-native-vector-icons/FontAwesome';
+import DrawerMenu from "../../screens/drawermenu/DrawerMenu";
 
 
 const Header =({
-    navigation,
     headername,
     greeting,
     isiconvisible
 })=>{
-
+const  navigation = useNavigation();
     return(
         <>
         <View style={styles.header}>
@@ -29,7 +29,7 @@ const Header =({
                             }
                         </View>
                         <TouchableOpacity style={styles.iconsearch}
-                        onPress={()=>{navigation.openDrawer()}}
+                        onPress={()=>{navigation.navigate('DrawerMenu')}}
                         >
                             {isiconvisible &&
                         <Image source={require("../../assets/menuicon.png")} style={{ width: 30, height: 30 }}

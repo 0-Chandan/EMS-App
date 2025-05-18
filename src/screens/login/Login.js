@@ -3,61 +3,108 @@ import { StyleSheet, TextInput ,Image, Button,TouchableNativeFeedback, Alert, Ba
 import { View, Text } from "react-native-animatable";
 import Inputbox from "../../Components/inputbox/Inputbox";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useSelector } from "react-redux";
-const Login = () => {
-    const currrentUser = useSelector((state)=>state.user.users);
+import { getAuth , signInWithEmailAndPassword } from "@react-native-firebase/auth";
+import { getDatabase , ref ,get } from "@react-native-firebase/database";
+import { set } from "@react-native-firebase/database";
+import { useDispatch } from "react-redux";
+import { signUp } from "../../redux/userSlice";
 
+const Login = () => {
+  
+    const dispatch = useDispatch();
     const[email,setemail]=useState("");
     const[password,setpassword]=useState("");
      const[errmsg,seterrmsg]=useState({});
     const navigation = useNavigation();
 
-    const getdata=async()=>{
+    // const getdata=async()=>{
         
-        try{
-             const getname= await AsyncStorage.getItem("name");
-             const getemail = await AsyncStorage.getItem("email");
-             const getpassword = await AsyncStorage.getItem("password")
-             console.log("getmail==",getemail);
-             console.log("password==",getpassword);
-             setTimeout(() => {
-                if(email===getemail && password===getpassword){
-                    setemail("");
-                    setpassword("");
-                    navigation.navigate("Tab", { screen: "Home" });
+    //     try{
+    //          const getname= await AsyncStorage.getItem("name");
+    //          const getemail = await AsyncStorage.getItem("email");
+    //          const getpassword = await AsyncStorage.getItem("password")
+    //          console.log("getmail==",getemail);
+    //          console.log("password==",getpassword);
+    //          setTimeout(() => {
+    //             if(email===getemail && password===getpassword){
+    //                 setemail("");
+    //                 setpassword("");
+    //                 navigation.navigate("Tab", { screen: "Home" });
                     
-                }
-                else{
-                    Alert.alert("Invalid email or passord");
-                }
-             }, 2000);
+    //             }
+    //             else{
+    //                 Alert.alert("Invalid email or passord");
+    //             }
+    //          }, 2000);
             
-        }
-        catch(error){
-            Alert.alert(error);
-        }
-    }
+    //     }
+    //     catch(error){
+    //         Alert.alert(error);
+    //     }
+    // }
     
-  
 
-    const handlelogin = ()=>{
-    let newerr={};
-    if(email===""){
-        newerr.email="This field is required";
-    }
-    else if(!email.includes("@")){
-        newerr.email="Invalid email";
-    }
-    else if(password==="")
-    {
-        newerr.password="This field is required"; 
-    }
-    else{
-        getdata()
-    }
+const handlelogin = async () => {
+  let newerr = {};
+  if (email === "") {
+    newerr.email = "This field is required";
+  } else if (!email.includes("@")) {
+    newerr.email = "Invalid email";
+  }
+
+  if (password === "") {
+    newerr.password = "This field is required";
+  }
+
+  if (Object.keys(newerr).length > 0) {
     seterrmsg(newerr);
-}
+    return;
+  }
+
+  const auth = getAuth();
+  const db = getDatabase();
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Step 1: Get all employee details from Firebase DB
+    const detailsRef = ref(db, "allempdata/allempdetails");
+    const snapshot = await get(detailsRef);
+
+    if (snapshot.exists()) {
+      const allEmployees = snapshot.val();
+
+      // Step 2: Search for the user by email
+      const userKey = Object.keys(allEmployees).find(
+        (key) => allEmployees[key].email === email
+      );
+
+      if (userKey) {
+        const userData = allEmployees[userKey];
+
+        // Step 3: Dispatch to Redux
+        dispatch(
+          signUp({
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+          })
+        );
+
+        // Step 4: Navigate to Home screen
+        navigation.navigate("Tab", { screen: "Home" });
+      } else {
+        Alert.alert("Error", "User not found in employee database.");
+      }
+    } else {
+      Alert.alert("Error", "Employee data not found.");
+    }
+  } catch (error) {
+    Alert.alert("Login Error", error.message);
+  }
+};
+
     return (
         <View style={styles.container}>
          <Image source={require("../../assets/emssplashlogo2.jpg")} 

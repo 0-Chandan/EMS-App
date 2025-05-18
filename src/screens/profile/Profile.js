@@ -1,10 +1,44 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; // Ionicons
 import Feather from 'react-native-vector-icons/Feather'; // Feather
 import Header from "../../Components/header/Header";
+import { getAuth , signOut } from '@react-native-firebase/auth';
+import { useNavigation } from '@react-navigation/native';
+
 
 const Profile = () => { 
+  const navigation = useNavigation();
+  const handlelogout = () =>{
+  Alert.alert(
+    'Alert',
+    'Are you sure you want to logout',
+    [
+      {
+        text: 'Cancel',
+        onPress:()=>console.log('Cancel Pressed'),
+        style:'cancel',
+      },
+      {
+        text:'OK',
+        onPress:async()=>{
+         const auth = getAuth();
+
+          signOut(auth)
+          .then(()=>{
+            navigation.navigate("Login")
+          }
+            
+          )
+          .catch((error)=>{
+            Alert.alert(error || 'something went wrong');
+          })
+        }
+      }
+
+    ]
+  )
+  }
     return (
         <>
         <Header
@@ -84,6 +118,14 @@ const Profile = () => {
             <Text style={styles.settingSubtitle}>see your bank details</Text>
           </View>
           <Icon name="chevron-forward" size={20} color="#6B7280" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.logoutcontainer}>
+        <TouchableOpacity style={styles.logoutButton}
+        onPress={handlelogout}
+        >
+          <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -194,5 +236,28 @@ const styles = StyleSheet.create({
   settingSubtitle: {
     fontSize: 12,
     color: '#6B7280',
-  }
+  },
+  logoutcontainer: {
+    marginTop: 30,
+  
+  
+  },
+  logoutButton: {
+    backgroundColor: '#ff4d4d',
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
+   
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
 });

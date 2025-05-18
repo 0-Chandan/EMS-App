@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "145418883517",
+    "project_id": "emplloyee-management-system",
+    "storage_bucket": "emplloyee-management-system.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:145418883517:android:1bdd4a83caaf9f64ef82d4",
+        "android_client_info": {
+          "package_name": "com.ems"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuYgXOVagb8uTIRddrZoD58gbKm2fVZHQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
