@@ -1,13 +1,23 @@
 import React,{useEffect, useState}from "react";
-import { StyleSheet, TextInput ,Image, Button,TouchableNativeFeedback, Alert, BackHandler } from "react-native";
+import { StyleSheet, TextInput ,Image, Button,TouchableNativeFeedback, Alert, BackHandler, 
+  PermissionsAndroid, Platform,
+  Linking,
+  ScrollView,
+  Keyboard,
+  KeyboardAvoidingView,
+
+ } from "react-native";
 import { View, Text } from "react-native-animatable";
 import Inputbox from "../../Components/inputbox/Inputbox";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { getAuth , signInWithEmailAndPassword } from "@react-native-firebase/auth";
 import { getDatabase , ref ,get } from "@react-native-firebase/database";
-import { set } from "@react-native-firebase/database";
 import { useDispatch } from "react-redux";
 import { signUp } from "../../redux/userSlice";
+import { someinfoattendence } from "../../redux/userSlice";
+import Geolocation from "react-native-geolocation-service";
+import database from '@react-native-firebase/database';
+
 
 const Login = () => {
   
@@ -15,6 +25,9 @@ const Login = () => {
     const[email,setemail]=useState("");
     const[password,setpassword]=useState("");
      const[errmsg,seterrmsg]=useState({});
+     const[ispermission,setispermission]=useState(false);
+    const[longitude,setlongitude]=useState(0);
+    const[latitude,setlatitude]=useState(0);
     const navigation = useNavigation();
 
     // const getdata=async()=>{
@@ -42,7 +55,110 @@ const Login = () => {
     //         Alert.alert(error);
     //     }
     // }
-    
+  const requestLocationPermission = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      }
+      return true; // iOS auto handled by Info.plist
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  };
+
+ const getLocation = async () => {
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
+      Alert.alert('Permission denied', 'Location permission is required.');
+      return;
+    } 
+     setispermission(true);
+    Geolocation.getCurrentPosition(
+      position => {
+        console.log('Position:', position);
+       setlongitude(position.coords.longitude);
+       setlatitude(position.coords.latitude);
+      },
+      error => {
+        console.log('Error:', error);
+        Alert.alert('Error getting location', error.message);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 10000
+      }
+    );
+  };
+
+  useEffect(() => {
+    getLocation();
+  }, []);
+
+
+const givepermission = () =>{
+    Linking.openSettings();
+}
+
+const markattendence = async(useremail) =>{
+try{
+  const snapshot = await database().ref("allempdata/allempdetails").once("value");
+  const empDetails = snapshot.val();
+
+  const empkey = Object.keys(empDetails).find(
+    (key)=>empDetails[key].email === useremail
+  );
+
+  if(!empkey){
+    Alert.alert("something went wrong");
+    return;
+  }
+  const today = new Date();
+  const todayDate = today.toISOString().split("T")[0];
+
+  const attendenceRef = database().ref(`allempdata/allempattendence/${empkey}/attendence/${todayDate}`);
+  const attendenceSnapshot = await attendenceRef.once("value");
+  if(attendenceSnapshot.exists()){
+    console.log("Attendence already marked");
+    return;
+  }
+  const logintTime = today.toTimeString().split(" ")[0];
+
+  await attendenceRef.set({
+    empid:empkey,
+    name:empDetails[empkey].name,
+    email:empDetails[empkey].email,
+    manager:'Ram',
+    date:todayDate,
+    status:'Present',
+    loginTime:logintTime,
+    logoutTime:"",
+    latitude:latitude,
+    longitude:longitude,
+    workingHours:"",
+    dayType:"half Day"
+  });
+
+  dispatch(
+    someinfoattendence({
+      logoutTime:"",
+      loginTime:logintTime,
+      latitude:latitude,
+      longitude:longitude
+    })
+  );
+  console.log("Attendence marked",logintTime,latitude,longitude);
+
+  Alert.alert("Attendence marked");
+}catch(error){
+  Alert.alert(error);
+}
+
+}
 
 const handlelogin = async () => {
   let newerr = {};
@@ -60,7 +176,7 @@ const handlelogin = async () => {
     seterrmsg(newerr);
     return;
   }
-
+    // markattendence(email);
   const auth = getAuth();
   const db = getDatabase();
 
@@ -91,6 +207,7 @@ const handlelogin = async () => {
             role: userData.role,
           })
         );
+        markattendence(email);
 
         // Step 4: Navigate to Home screen
         navigation.navigate("Tab", { screen: "Home" });
@@ -106,6 +223,8 @@ const handlelogin = async () => {
 };
 
     return (
+      <ScrollView>
+        <KeyboardAvoidingView>
         <View style={styles.container}>
          <Image source={require("../../assets/emssplashlogo2.jpg")} 
            style={{width:150,height:150}}/>
@@ -126,19 +245,31 @@ const handlelogin = async () => {
           />
           <Text style={{marginLeft:"57%",color:"#545454",marginTop:"5%"}}
           onPress={()=>navigation.navigate("Forgotpass")}>Forgot Password?</Text>
-          <TouchableNativeFeedback 
+        {ispermission ?
+        (<TouchableNativeFeedback 
           onPress={handlelogin} 
           background={TouchableNativeFeedback.Ripple("#ffffff", false)}>
       <View style={styles.button}>
         <Text style={{color:"white",fontSize:16}}>Login</Text>
       </View>
-    </TouchableNativeFeedback>
+    </TouchableNativeFeedback>):
+    (<TouchableNativeFeedback 
+          onPress={givepermission} 
+          background={TouchableNativeFeedback.Ripple("#ffffff", false)}>
+      <View style={styles.button}>
+        <Text style={{color:"white",fontSize:16}}>Give Permission</Text>
+      </View>
+      
+    </TouchableNativeFeedback>)
+    }
     <Text style={{marginTop:"5%",fontSize:15}}>Don't have an Account?
         <Text style={{color:"#2049a1"}} 
         onPress={() => navigation.navigate("Signup")}
         >Register Now</Text>
         </Text>
         </View>
+        </KeyboardAvoidingView>
+        </ScrollView>
     )
 }
 const styles = StyleSheet.create({

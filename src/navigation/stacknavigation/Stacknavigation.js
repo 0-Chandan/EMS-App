@@ -57,7 +57,6 @@ const Stacknavigation = () => {
                 name="Tab"  
                 options={{ headerShown: false }} 
                 component={Tab} 
-                
                 />
             </Stack.Navigator>
       

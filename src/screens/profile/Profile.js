@@ -1,13 +1,17 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import React, { use } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, Alert, SafeAreaViewBase } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; // Ionicons
 import Feather from 'react-native-vector-icons/Feather'; // Feather
 import Header from "../../Components/header/Header";
 import { getAuth , signOut } from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
-
+import { useSelector } from 'react-redux';
+import database from '@react-native-firebase/database'; 
 
 const Profile = () => { 
+  const attendencedetails = useSelector(state => state.user.empattencedata);
+  console.log("attendencedetails==",attendencedetails);
+  const user = useSelector((state)=>state.user.users);
   const navigation = useNavigation();
   const handlelogout = () =>{
   Alert.alert(
@@ -23,9 +27,53 @@ const Profile = () => {
         text:'OK',
         onPress:async()=>{
          const auth = getAuth();
+           try{
+          const snapshot = await database().ref("allempdata/allempdetails").once("value");
+          const empdetails = snapshot.val();
 
+          const empkey = Object.keys(empdetails).find(
+            (key)=>empdetails[key].email===user.email
+          );
+          if(!empkey){
+            Alert.alert("something went wrong");
+            return;
+          }
+
+          const today = new Date();
+          const todayDate = today.toISOString().split("T")[0];
+          console.log("todayDate==",todayDate);
+          const attendenceRef = database().ref(`allempdata/allempattendence/${empkey}/attendence/${todayDate}`);
+          const attendanceSnapshot = await attendenceRef.once("value");
+          console.log("attendanceSnapshot==",attendanceSnapshot);
+          if(!attendanceSnapshot.exists()){
+            Alert.alert("Attendence not marked");
+            return;
+          }
+
+          const logoutTime = today.toTimeString().split(" ")[0];
+          const attendanceData = attendanceSnapshot.val();
+          const login = new Date(`${todayDate} ${attendanceData.loginTime}`);
+          const logout  = new Date(`${todayDate} ${logoutTime}`);
+          console.log("logout==",logout,"login==",login);
+          const diffMs = logout - login;
+          console.log("diffMs==",diffMs);
+          const hour = Math.floor(diffMs/(1000*60*60)); 
+          const minutes = Math.floor((diffMs / (1000 * 60)) % 60);
+          const workingHours = `${hour}hr ${minutes}min`;
+          console.log("workingHours==",workingHours);
+          await attendenceRef.update({
+            logoutTime:logoutTime,
+            workingHours:workingHours,
+            dayType:hour>4?(hour>8 ? "Full Day":"Half Day"):"Short Leave",
+          })
+
+           Alert.alert("Logout Successfully");
+           }catch(error){
+           Alert.alert(error || 'something went wrong');
+           }
           signOut(auth)
           .then(()=>{
+            
             navigation.navigate("Login")
           }
             

@@ -6,6 +6,12 @@ const initialState = {
       email:"",
       name:"",
       role:"",
+    },
+    empattencedata:{
+      logoutTime:"",
+        loginTime:"",
+        latitude:0,
+        longitude:0,
     }
 };
   
@@ -18,9 +24,13 @@ const userSlice = createSlice({
         },
         logout(state){
             state.users={};
+            state.empattencedata={};
+        },
+        someinfoattendence(state , action){
+            state.empattencedata= action.payload
         }
     }
 })
 
-export const {signUp}= userSlice.actions;
+export const {signUp , logout , someinfoattendence}= userSlice.actions;
 export default userSlice.reducer;

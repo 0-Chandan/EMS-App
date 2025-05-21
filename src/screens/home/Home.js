@@ -37,10 +37,9 @@ const Home = ({navigation}) => {
        navigation.navigate("Login");
    }
     },[])
-    const[empname,setempname]=useState("");
-    const[role,setrole]=useState("");
-    const[greeting,setgreeting]=useState("");   
-    console.log("empname==",empname , role);
+     
+ const[greeting,setgreeting]=useState("");   
+   
    
    
     const[search,setSearch]=useState("");

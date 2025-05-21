@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,8 @@ import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import { Alert } from 'react-native';
+import { getAuth  } from '@react-native-firebase/auth';
+import database, { set } from '@react-native-firebase/database';
 
 
 const sampleData = [
@@ -146,10 +148,67 @@ Logout: ${item.logoutTime}
 
 const AttendanceList = () => {
   const [search, setSearch] = useState('');
-  const filteredData = sampleData.filter(item =>
-    item.name.toLowerCase().includes(search.toLowerCase())
+  const[attendencedata, setAttendencedata] = useState([]);
+  console.log('attendencedata==>>', attendencedata);
+  const filteredData = attendencedata?.filter(item =>
+    item?.empid?.toLowerCase().includes(search.toLowerCase())
   );
+ const fetchEmployeeAttendance = async () => {
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
+    if (!user) {
+      Alert.alert("Error", "No user logged in");
+      return;
+    }
 
+    // First get the employee ID from the user's email
+    const empSnapshot = await database().ref("allempdata/allempdetails").once("value");
+    const empDetails = empSnapshot.val();
+    
+    if (!empDetails) {
+      Alert.alert("Error", "No employee data found");
+      return;
+    }
+
+    // Find employee by email (assuming user.email matches employee email)
+    const empId = Object.keys(empDetails).find(
+      (key) => empDetails[key].email === user.email
+    );
+
+    if (!empId) {
+      Alert.alert("Error", "Employee record not found");
+      return;
+    }
+
+    // Now fetch attendance only for this employee
+    const attendanceSnapshot = await database()
+      .ref(`allempdata/allempattendence/${empId}/attendence`)
+      .once("value");
+    
+    const attendanceData = attendanceSnapshot.val();
+    const formattedData = [];
+
+    if (attendanceData) {
+      Object.keys(attendanceData).forEach(date => {
+        formattedData.push({
+          id: `${empId}_${date}`,
+          ...attendanceData[date]
+        });
+      });
+    }
+
+    setAttendencedata(formattedData);
+  } catch (error) {
+    console.error("Fetch attendance error:", error);
+    Alert.alert("Error", "Failed to fetch attendance data");
+    setAttendencedata([]);
+  }
+};
+ useEffect(()=>{
+  fetchEmployeeAttendance();
+ },[])
   const handleExport = (type) => {
     console.log(`Exporting to ${type}`);
     // Implement export logic here
@@ -185,7 +244,7 @@ const AttendanceList = () => {
          renderItem={({ item }) => (
   <View style={styles.card}>
     <View style={styles.cardHeader}>
-      <Text style={styles.name}>{item.name} ({item.empId})</Text>
+      <Text style={styles.name}>{item.name} ({item.empid})</Text>
       <Text style={[styles.status, { backgroundColor: item.status === 'Present' ? '#4caf50' : '#ff9800' }]}>
         {item.status}
       </Text>
@@ -194,8 +253,9 @@ const AttendanceList = () => {
     <Text style={styles.label}>📅 Date: <Text style={styles.value}>{item.date}</Text></Text>
     <Text style={styles.label}>🧑 Manager: <Text style={styles.value}>{item.manager}</Text></Text>
     <Text style={styles.label}>⏰ Login: <Text style={styles.value}>{item.loginTime}</Text> | Logout: <Text style={styles.value}>{item.logoutTime}</Text></Text>
-    <Text style={styles.label}>🕒 Hours: <Text style={styles.value}>{item.workingHours}</Text> ({item.dayType})</Text>
-    <Text style={styles.label}>📍 Location: <Text style={styles.value}>{item.latitude}, {item.longitude}</Text></Text>
+    <Text style={styles.label}>🕒 Hours: <Text style={styles.value}>{item.workingHours?item.workingHours:"0"}</Text> ({item.dayType})</Text>
+    <Text style={styles.label}>📍 Latitude: <Text style={styles.value}>{item.latitude}</Text></Text>
+     <Text style={styles.label}>📍 Longitude: <Text style={styles.value}> {item.longitude}</Text></Text>
   </View>
 )}
 
@@ -271,6 +331,11 @@ status: {
   fontSize: 12,
   overflow: 'hidden',
   fontWeight: '600',
+},
+name: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: '#152c6b',
 },
 
 label: {
